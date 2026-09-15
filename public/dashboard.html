@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Shin Supplies — CRM & Pipeline</title>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html{height:auto;}
+body{font-family:'Satoshi',-apple-system,sans-serif;padding:20px 20px 36px;background:#191919;color:#fff;overflow-y:auto;overflow-x:hidden;min-height:420px;}
+:root{
+  --g:#C8FF00;--gd:#AAFF00;--gm:rgba(200,255,0,.09);--gb:rgba(200,255,0,.2);
+  --red:#FF6B6B;--amber:#FBBF24;--blue:#60A5FA;--purple:#C084FC;--teal:#34D399;
+  --zero-val:rgba(255,255,255,.18);
+  --tier-pri:#C8FF00;--tier-avg:#FBBF24;--tier-weak:#8E8E88;
+}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:999px;}
+
+.card{background:#222222;border:1px solid rgba(255,255,255,.07);border-radius:16px;}
+
+/* ── Header ── */
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:4px;}
+.h-title{font-size:22px;font-weight:900;letter-spacing:-.04em;}
+.h-right{display:flex;align-items:center;gap:8px;}
+.ts{font-size:10px;font-weight:500;color:rgba(255,255,255,.18);}
+.icon-btn{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0;}
+.icon-btn:hover{background:var(--gm);border-color:var(--gb);color:var(--g);}
+.icon-btn svg{width:13px;height:13px;}
+.icon-btn.spinning svg{animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── Month nav ── */
+.mn-nav{display:flex;align-items:center;gap:6px;}
+.mn-btn{width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.45);font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
+.mn-btn:hover:not(:disabled){background:var(--gm);border-color:var(--gb);color:var(--g);}
+.mn-btn:disabled{opacity:.25;cursor:default;}
+.mn-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.6);min-width:72px;text-align:center;letter-spacing:-.01em;}
+
+/* ── Grids ── */
+.row{margin-bottom:8px;}
+.g-hero{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.g2{display:grid;grid-template-columns:3fr 2fr;gap:10px;}
+.g2-eq{display:grid;grid-template-columns:2fr 3fr;gap:10px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+@media(max-width:900px){.g3{grid-template-columns:1fr 1fr;}}
+@media(max-width:1000px){.g-hero{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:800px){.g-hero{grid-template-columns:1fr 1fr;}.g2,.g2-eq{grid-template-columns:1fr;}}
+@media(max-width:600px){.g3{grid-template-columns:1fr;}}
+@media(max-width:480px){
+  /* Compact body — ~319px usable width */
+  body{padding:10px 10px 16px;}
+  .ts{display:none;}
+  .h-right{flex-wrap:wrap;justify-content:flex-end;}
+  .h-title{font-size:17px;}
+
+  /* 2-col KPI grid — 5 cards become 3 rows instead of 5 rows */
+  .g-hero{grid-template-columns:1fr 1fr;gap:6px;}
+  .hero{padding:9px 10px 8px;}
+  .kpi{padding:9px 10px 8px;}
+  .hero-val{font-size:22px;}
+  .kpi-val{font-size:26px;letter-spacing:-1px;}
+  .hero-eyebrow,.kpi-lbl{font-size:8.5px;margin-bottom:6px;}
+  .kpi-lbl{white-space:normal;}
+  .hero-label{font-size:10px;margin-top:4px;}
+  .hero-sub,.kpi-sub{font-size:9px;margin-top:3px;}
+
+  /* Compact card/panel padding */
+  .card{border-radius:10px;}
+  .panel{padding:9px 10px 9px;}
+
+  /* Pipeline rows tighter */
+  .f-item{margin-bottom:5px;}
+  .f-track{height:18px;}
+  .f-lbl{font-size:10px;width:86px;}
+  .f-n{font-size:11px;width:22px;}
+
+  /* Live tiles compact */
+  .row{margin-bottom:6px;}
+
+  /* Hide rep breakdown + sources on mobile — too tall for Notion embed */
+  .mob-hide{display:none;}
+
+  /* Rep/source inside panels — single col if shown */
+  .rep-cards.layout-4,.rep-cards.layout-2{grid-template-columns:1fr;}
+  .src-grid{grid-template-columns:1fr;}
+  .speed-row{flex-direction:column;align-items:flex-start;gap:10px;}
+}
+@media(max-width:600px){
+  .rep-cards.layout-4{grid-template-columns:1fr 1fr;}
+  .src-grid{grid-template-columns:1fr 1fr;}
+  .speed-row{flex-direction:column;align-items:flex-start;gap:10px;}
+}
+
+/* ── Hero stat ── */
+.hero{padding:16px 18px 14px;}
+.hero-eyebrow{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.4);margin-bottom:10px;display:block;}
+.hero-val{font-size:32px;font-weight:900;letter-spacing:-1.5px;line-height:1;color:var(--g);}
+.hero-label{font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin-top:8px;}
+.hero-sub{font-size:11px;font-weight:500;color:rgba(255,255,255,.45);margin-top:4px;}
+
+/* ── Small KPI ── */
+.kpi{padding:16px 18px 14px;}
+.kpi-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.4);margin-bottom:14px;display:block;white-space:nowrap;}
+.kpi-val{font-size:38px;font-weight:900;letter-spacing:-1.5px;line-height:1;}
+.kpi-sub{font-size:11px;font-weight:500;color:rgba(255,255,255,.45);margin-top:8px;}
+.lt-card{grid-column:span 2;}
+.lt{display:flex;flex-direction:column;gap:9px;margin-top:2px;}
+.lt-row{display:flex;align-items:center;gap:8px;}
+.lt-lbl{width:50px;font-size:10px;font-weight:700;color:rgba(255,255,255,.55);flex-shrink:0;}
+.lt-track{flex:1;height:16px;background:rgba(140,140,140,.16);border-radius:6px;overflow:hidden;}
+.lt-fill{height:100%;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:5px;font-size:9px;font-weight:700;color:rgba(0,0,0,.72);box-sizing:border-box;white-space:nowrap;}
+.lt-pct{width:26px;text-align:right;font-size:10px;font-weight:600;color:rgba(255,255,255,.4);flex-shrink:0;}
+.lt-count{font-size:17px;font-weight:900;color:#fff;min-width:20px;text-align:right;letter-spacing:-.5px;flex-shrink:0;}
+
+/* ── Panel ── */
+.panel{padding:14px 18px 14px;}
+.panel-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px;}
+.panel-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.55);}
+.badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:6px;background:var(--gm);color:var(--g);border:1px solid var(--gb);}
+.badge.red{background:rgba(255,107,107,.1);color:var(--red);border-color:rgba(255,107,107,.2);}
+.badge.amber{background:rgba(251,191,36,.1);color:var(--amber);border-color:rgba(251,191,36,.2);}
+.badge.blue{background:rgba(96,165,250,.1);color:var(--blue);border-color:rgba(96,165,250,.2);}
+
+/* ── Pipeline funnel ── */
+.f-item{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.f-item:last-child{margin-bottom:0;}
+.f-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:rgba(255,255,255,.5);width:140px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.f-track{flex:1;height:24px;border-radius:6px;background:rgba(255,255,255,.04);overflow:hidden;position:relative;}
+.f-fill{height:100%;border-radius:6px;transition:width .6s cubic-bezier(.4,0,.2,1);}
+.f-n{font-size:13px;font-weight:900;color:rgba(255,255,255,.6);width:28px;text-align:right;flex-shrink:0;}
+
+/* ── Response speed ── */
+.speed-row{display:flex;align-items:flex-end;gap:18px;margin-bottom:16px;}
+.speed-big{font-size:48px;font-weight:900;letter-spacing:-2.5px;line-height:1;}
+.speed-unit{font-size:14px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:8px;}
+.speed-meta{flex:1;}
+.speed-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;margin-bottom:8px;}
+.speed-desc{font-size:11.5px;font-weight:500;color:rgba(255,255,255,.5);line-height:1.5;}
+.rate-track{height:5px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;margin-top:16px;}
+.rate-fill{height:100%;border-radius:999px;transition:width .6s ease;}
+.rate-meta{display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:rgba(255,255,255,.4);margin-top:7px;}
+
+/* ── Rep cards ── */
+.rep-cards{display:grid;gap:10px;}
+.rep-cards.layout-2{grid-template-columns:1fr 1fr;}
+.rep-cards.layout-4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.rep-page-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px;}
+.rep-page-btn{font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);cursor:pointer;letter-spacing:.04em;}
+.rep-page-btn:hover:not(:disabled){border-color:var(--g);color:var(--g);}
+.rep-page-btn:disabled{opacity:.3;cursor:default;}
+.rep-page-info{font-size:11px;font-weight:600;color:rgba(255,255,255,.3);}
+body.light .rep-page-btn{border-color:#E3E2DD;background:#F6F5F1;color:#8A8980;}
+body.light .rep-page-btn:hover:not(:disabled){border-color:#5A8C00;color:#527800;}
+body.light .rep-page-info{color:#A8A79F;}
+.rep-card{flex:1;min-width:180px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;position:relative;overflow:visible;transition:border-color .2s;}
+.rep-card.leader{border-color:rgba(200,255,0,.35);background:rgba(200,255,0,.04);}
+.rep-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.rep-rank{font-size:16px;font-weight:900;letter-spacing:-.5px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.5);}
+.rep-card.leader .rep-rank{background:rgba(200,255,0,.15);color:var(--g);}
+.rep-card-name{font-size:14px;font-weight:900;color:rgba(255,255,255,.9);letter-spacing:-.3px;}
+.rep-card.leader .rep-card-name{color:#fff;}
+.rep-hero{text-align:center;padding:6px 0 10px;}
+.rep-hero-val{font-size:40px;font-weight:900;letter-spacing:-2px;line-height:1;color:rgba(255,255,255,.9);}
+.rep-card.leader .rep-hero-val{color:var(--g);}
+.rep-hero-lbl{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:4px;}
+.rep-bar-wrap{margin-bottom:8px;}
+.rep-bar-track{height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden;margin:6px 0 4px;}
+.rep-bar-fill{height:100%;border-radius:3px;background:var(--g);transition:width .6s ease;}
+.rep-crown{position:absolute;top:-14px;right:10px;width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6));pointer-events:none;}
+.rep-bar-meta{display:flex;justify-content:space-between;align-items:center;}
+.rep-bar-lbl{font-size:10px;font-weight:600;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em;}
+.rep-bar-pct{font-size:13px;font-weight:800;color:var(--g);}
+.rep-bar-pct.amber{color:var(--amber);}
+.rep-stat{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-top:1px solid rgba(255,255,255,.05);}
+.rep-stat-lbl{font-size:10.5px;font-weight:600;color:rgba(255,255,255,.35);}
+.rep-stat-val{font-size:12px;font-weight:800;color:rgba(255,255,255,.7);}
+
+/* ── Donut ── */
+.donut-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;}
+.donut-svg-wrap{position:relative;flex-shrink:0;}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
+.donut-total{font-size:22px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1;}
+.donut-total-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.3);margin-top:3px;}
+.donut-legend{width:100%;display:flex;flex-direction:column;gap:10px;}
+.dl-item{display:flex;align-items:center;gap:9px;}
+.dl-swatch{width:9px;height:9px;border-radius:3px;flex-shrink:0;}
+.dl-info{flex:1;min-width:0;}
+.dl-name{font-size:12px;font-weight:700;color:rgba(255,255,255,.82);}
+.dl-bar-track{width:100%;height:8px;border-radius:999px;background:rgba(255,255,255,.05);margin-top:5px;overflow:hidden;}
+.dl-bar-fill{height:8px;border-radius:999px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.dl-meta{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);flex-shrink:0;text-align:right;min-width:46px;}
+
+/* ── Sources grid ── */
+.cohort-note{margin-top:14px;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:500;color:rgba(255,255,255,.35);}
+.cohort-note-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);flex-shrink:0;opacity:.7;}
+body.light .cohort-note{background:rgba(0,0,0,.025);border-color:#E3E2DD;color:#9C9B93;}
+.src-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.src-card{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;}
+.src-card-top{display:flex;align-items:center;gap:8px;}
+.src-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.95;}
+.src-icon img{width:22px;height:22px;object-fit:contain;}
+.src-name{font-size:11px;font-weight:700;color:rgba(255,255,255,.78);line-height:1.2;}
+.src-count{font-size:22px;font-weight:900;letter-spacing:-.8px;line-height:1;}
+.src-card-foot{display:flex;align-items:center;justify-content:space-between;}
+.src-leads-lbl{font-size:10px;font-weight:600;color:rgba(255,255,255,.35);}
+.src-close-pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;display:inline-block;}
+
+/* ── Empty / Loading ── */
+.loading{display:flex;align-items:center;justify-content:center;min-height:300px;flex-direction:column;gap:10px;}
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.06);border-top-color:var(--g);border-radius:50%;animation:spin .7s linear infinite;}
+.loading-text{font-size:11px;color:rgba(255,255,255,.25);font-weight:600;}
+.empty{font-size:11px;color:rgba(255,255,255,.2);font-weight:500;padding:16px 0;}
+
+.footer{text-align:center;padding:26px 0 4px;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.1);}
+    /* ── Light mode ── */
+    body.light{background:#F6F5F1;color:#111110;
+      --g:#388E3C;--gd:#2E7D32;--gm:rgba(56,142,60,.08);--gb:rgba(56,142,60,.2);
+      --red:#D32F2F;--amber:#388E3C;--blue:#1976D2;--teal:#2E7D32;
+      --zero-val:rgba(0,0,0,.15);
+      --tier-pri:#5A8C00;--tier-avg:#D9870B;--tier-weak:#9C9B93;
+    }
+    body.light .card{background:#FFFFFF;border-color:#E3E2DD;}
+    body.light .panel-title{color:#4E4D48;}
+    body.light .badge{background:rgba(90,140,0,.09);color:#5A8C00;border-color:rgba(90,140,0,.18);}
+    body.light .badge.red{background:rgba(185,28,28,.07);color:#B91C1C;border-color:rgba(185,28,28,.16);}
+    body.light .badge.blue{background:rgba(21,101,192,.08);color:#1565C0;border-color:rgba(21,101,192,.18);}
+    body.light .eyebrow{color:#9C9B93;}
+    body.light .h-title{color:#111110;}
+    body.light .ts{color:#A8A79F;}
+    body.light .kpi-lbl{color:#6B6A63;}
+    body.light .kpi-sub{color:#8A8980;}
+    body.light .kpi-val{color:#111110;}
+    body.light .lt-lbl{color:#6B6A63;}
+    body.light .lt-count{color:#111110;}
+    body.light .lt-track{background:rgba(0,0,0,.06);}
+    body.light .lt-pct{color:#8A8980;}
+    body.light .hero-val{color:#111110;}
+    body.light .hero-label{color:#5A5952;}
+    body.light .hero-sub{color:#8A8980;}
+    body.light .hero-eyebrow{color:#8A8980;}
+    body.light .panel-hdr{border-color:#E3E2DD;}
+    body.light .f-lbl{color:#5A5952;}
+    body.light .f-n{color:#111110;}
+    body.light .f-track{background:rgba(0,0,0,.06);}
+    body.light .bar-label{color:#5A5952;}
+    body.light .bar-count{color:#111110;}
+    body.light .bar-track{background:rgba(0,0,0,.06);}
+    body.light .rate-track{background:rgba(0,0,0,.06);}
+    body.light .rate-meta{color:#8A8980;}
+    body.light .src-card{background:#F9F8F4;border-color:#E3E2DD;}
+    body.light .src-name{color:#3A3933;}
+    body.light .src-leads-lbl{color:#8A8980;}
+    body.light .src-n{color:#111110;}
+    body.light .rep-card{background:#F9F8F4;border-color:#E3E2DD;}
+    body.light .rep-card.leader{background:#F2FFDB;border-color:rgba(90,140,0,.35);}
+    body.light .rep-card-name{color:#111110;}
+    body.light .rep-rank{background:rgba(0,0,0,.05);color:#8A8980;}
+    body.light .rep-card.leader .rep-rank{background:rgba(90,140,0,.12);color:#527800;}
+    body.light .rep-hero-val{color:#111110;}
+    body.light .rep-card.leader .rep-hero-val{color:#527800;}
+    body.light .rep-hero-lbl{color:#aaa;}
+    body.light .rep-bar-track{background:rgba(0,0,0,.07);}
+    body.light .rep-stat{border-color:#eee;}
+    body.light .rep-stat-lbl{color:#aaa;}
+    body.light .rep-stat-val{color:#444;}
+    body.light .dl-name{color:#424242;}
+    body.light .dl-meta{color:#9E9E9E;}
+    body.light .dl-bar-track{background:rgba(0,0,0,.07);}
+    body.light .donut-total{color:#111;}
+    body.light .donut-total-lbl{color:#9E9E9E;}
+    body.light .speed-desc{color:#616161;}
+    body.light .mn-btn{background:rgba(0,0,0,.04);border-color:#E0E0E0;color:#616161;}
+    body.light .mn-lbl{color:#3A3933;}
+    body.light .icon-btn{background:rgba(0,0,0,.04);border-color:#E0E0E0;color:#616161;}
+    body.light .icon-btn:hover{background:rgba(0,0,0,.07);color:#388E3C;}
+    body.light .loading-text{color:#9E9E9E;}
+    body.light .spinner{border-color:rgba(0,0,0,.06);border-top-color:#388E3C;}
+    body.light .wgt-footer{color:#BDBDBD;}
+    body.light .empty{color:#BDBDBD;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <p class="eyebrow">Shin Supplies · Cupterra</p>
+    <h1 class="h-title">CRM & Pipeline</h1>
+  </div>
+  <div class="h-right">
+    <div class="mn-nav">
+      <button class="mn-btn" onclick="mnPrev()">&#8249;</button>
+      <span class="mn-lbl" id="mn-lbl">May 2026</span>
+      <button class="mn-btn" id="mn-next" onclick="mnNext()" disabled>&#8250;</button>
+    </div>
+    <span class="ts" id="ts"></span>
+    <button class="icon-btn" id="mb" onclick="toggleMode()" title="Toggle light/dark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    <button class="icon-btn" id="rb" onclick="doRefresh()" title="Refresh">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<div id="main">
+  <div class="loading"><div class="spinner"></div><div class="loading-text">Loading</div></div>
+</div>
+
+<div class="footer">Widgets by Opxio.io</div>
+
+<script>
+const _tok = new URLSearchParams(location.search).get('token') || '';
+const _now  = new Date();
+let filterMonth = null; // null = current month
+let _navTimer = null; // debounce month navigation
+
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function fmtMonthLbl(fm) {
+  const d = fm ? new Date(fm.year, fm.month, 1) : new Date();
+  return d.toLocaleString('default', { month: 'short', year: 'numeric' });
+}
+function currentMonthLabel() {
+  const d = filterMonth ? new Date(filterMonth.year, filterMonth.month, 1) : new Date();
+  return d.toLocaleString('default', { month: 'long', year: 'numeric' });
+}
+function currentMonthShort() {
+  const d = filterMonth ? new Date(filterMonth.year, filterMonth.month, 1) : new Date();
+  return d.toLocaleString('default', { month: 'short', year: 'numeric' });
+}
+
+function updateMonthNav() {
+  document.getElementById('mn-lbl').textContent = fmtMonthLbl(filterMonth);
+  const isCurrentMonth = !filterMonth ||
+    (filterMonth.year === _now.getFullYear() && filterMonth.month === _now.getMonth());
+  document.getElementById('mn-next').disabled = isCurrentMonth;
+}
+
+function mnPrev() {
+  if (!filterMonth) filterMonth = { year: _now.getFullYear(), month: _now.getMonth() };
+  filterMonth.month--;
+  if (filterMonth.month < 0) { filterMonth.month = 11; filterMonth.year--; }
+  updateMonthNav(); clearTimeout(_navTimer); _navTimer = setTimeout(load, 300);
+  load();
+}
+function mnNext() {
+  if (!filterMonth) return;
+  filterMonth.month++;
+  if (filterMonth.month > 11) { filterMonth.month = 0; filterMonth.year++; }
+  if (filterMonth.year > _now.getFullYear() ||
+      (filterMonth.year === _now.getFullYear() && filterMonth.month >= _now.getMonth())) {
+    filterMonth = null;
+  }
+  updateMonthNav(); clearTimeout(_navTimer); _navTimer = setTimeout(load, 300);
+  load();
+}
+
+const PROD_COLORS  = ['#C8FF00','#60A5FA','#C084FC','#FBBF24','#34D399','#F97316'];
+const PROD_NAMES   = {'Paper Cup':'Paper Cup','Plastic Cup':'Plastic Cup','Greaseproof Paper':'Grease Paper','PET Can':'PET Can'};
+const SRC_MAP = {
+  'WhatsApp':          { color:'#25D366', icon:'<img src="https://widgets.opxio.io/icons/social/social.png" width="18" height="18" style="object-fit:contain;"/>' },
+  'Instagram':         { color:'#E1306C', icon:'<img src="https://widgets.opxio.io/icons/social/instagram.png" width="18" height="18" style="object-fit:contain;"/>' },
+  'Facebook':          { color:'#60A5FA', icon:'<img src="https://widgets.opxio.io/icons/social/facebook.png" width="18" height="18" style="object-fit:contain;"/>' },
+  'Facebook Ads':      { color:'#60A5FA', icon:'<img src="https://widgets.opxio.io/icons/social/facebook.png" width="18" height="18" style="object-fit:contain;"/>' },
+  'Iklan Facebook':    { color:'#60A5FA', icon:'<img src="https://widgets.opxio.io/icons/social/facebook.png" width="18" height="18" style="object-fit:contain;"/>' },
+  'TikTok':            { color:'#E879F9', icon:'<img src="https://widgets.opxio.io/icons/social/tiktok.png" width="18" height="18" style="object-fit:contain;"/>' },
+  'Threads':           { color:'#F97316', icon:'<img src="https://widgets.opxio.io/icons/social/threads.png" width="18" height="18" style="object-fit:contain;"/>' },
+  'LinkedIn':          { color:'#60A5FA', icon:'<img src="https://widgets.opxio.io/icons/social/linkedin.png" width="18" height="18" style="object-fit:contain;"/>' },
+  'Shopee':            { color:'#F97316', icon:'<img src="https://widgets.opxio.io/icons/social/shopee.png" width="18" height="18" style="object-fit:contain;"/>' },
+  'Referral':          { color:'#C8FF00', icon:'<img src="https://widgets.opxio.io/icons/social/referral.png" width="18" height="18" style="object-fit:contain;"/>' },
+  'Rujukan / Kenalan': { color:'#C8FF00', icon:'<img src="https://widgets.opxio.io/icons/social/referral.png" width="18" height="18" style="object-fit:contain;"/>' },
+  'Walk-in':           { color:'#34D399', icon:'<img src="https://widgets.opxio.io/icons/social/walk-in.png" width="18" height="18" style="object-fit:contain;"/>' },
+  'Others':            { color:'#9CA3AF', icon:'<img src="https://widgets.opxio.io/icons/social/other-sources.png" width="18" height="18" style="object-fit:contain;"/>' },
+  'Lain-lain':         { color:'#9CA3AF', icon:'<img src="https://widgets.opxio.io/icons/social/other-sources.png" width="18" height="18" style="object-fit:contain;"/>' },
+};
+function srcColor(name){ return (SRC_MAP[name]||{color:'#9CA3AF'}).color; }
+function srcIcon(name){ return (SRC_MAP[name]||SRC_MAP['Others']||{icon:'<span style="font-size:14px;">📋</span>'}).icon; }
+function getStageColors(){return _light
+  ?['#6B7280','#4B8EC4','#B8882E','#7B5EA7','#C8FF00','#8B4444']
+  :['#6B7280','#4B8EC4','#B8882E','#7B5EA7','#C8FF00','#8B4444'];}
+const REP_COLORS   = ['#C8FF00','#60A5FA','#C084FC','#FBBF24','#34D399'];
+
+function initials(n){ return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
+
+const DONUT_R = 44;
+const DONUT_CIRC = 2 * Math.PI * DONUT_R;
+
+function renderDonut(obj, colors, _unused) {
+  if (!obj || !Object.keys(obj).length) return '<div class="empty">No data yet</div>';
+  const entries = Object.entries(obj).sort((a,b) => b[1]-a[1]);
+  const total = entries.reduce((s,[,v])=>s+v,0) || 1;
+  const size = 110;
+  const cx = size/2, cy = size/2, r = DONUT_R;
+  const circ = 2*Math.PI*r;
+
+  // Build arcs
+  let offset = 0;
+  const arcs = entries.map(([name,count],i) => {
+    const color = colors[i % colors.length];
+    const frac = count/total;
+    const len = frac*circ;
+    const gap = entries.length>1 ? 3 : 0;
+    const rot = -90 + offset*360;
+    offset += frac;
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+      stroke="${color}" stroke-width="8" stroke-linecap="round"
+      stroke-dasharray="${Math.max(len-gap,1)} ${circ}"
+      transform="rotate(${rot} ${cx} ${cy})"
+      style="transition:all .8s cubic-bezier(.4,0,.2,1)"/>`;
+  }).join('');
+
+  const svg = `<div class="donut-svg-wrap" style="width:${size}px;height:${size}px;">
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="overflow:visible;">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${_light?'rgba(0,0,0,.07)':'rgba(255,255,255,.05)'}" stroke-width="8"/>
+      ${arcs}
+    </svg>
+    <div class="donut-center">
+      <div class="donut-total">${total}</div>
+      <div class="donut-total-lbl">Total</div>
+    </div>
+  </div>`;
+
+  const maxCount = entries[0][1] || 1;
+  const legend = entries.map(([name,count],i) => {
+    const color = colors[i % colors.length];
+    const pct = Math.round((count/total)*100);
+    const barW = Math.round((count/maxCount)*100);
+    const label = PROD_NAMES[name] || name;
+    return `<div class="dl-item">
+      <div class="dl-swatch" style="background:${color};"></div>
+      <div class="dl-info">
+        <div class="dl-name">${esc(label)}</div>
+        <div class="dl-bar-track"><div class="dl-bar-fill" style="width:${barW}%;background:${color};"></div></div>
+      </div>
+      <div class="dl-meta">${count} · ${pct}%</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="donut-wrap">${svg}<div class="donut-legend">${legend}</div></div>`;
+}
+
+
+// Source display name mapping
+const SRC_DISPLAY={
+  'Iklan Facebook':'Facebook Ads',
+  'Rujukan / Kenalan':'Referral',
+  'Lain-lain':'Others',
+  'Walk-in':'Walk-in',
+  'TikTok':'TikTok',
+  'Threads':'Threads',
+};
+// Source count color logic:
+// - Ad channels (Facebook, TikTok, Threads) → lime green
+// - Rujukan/Kenalan → brand color
+// - Lain-lain/Others → muted grey; Walk-in → lime green
+const SRC_GREY = new Set(['Lain-lain']);
+const SRC_BRAND = new Set(['Rujukan / Kenalan']);
+
+function renderSources(obj){
+  if(!obj||!Object.keys(obj).length) return '<div class="empty">No source data yet</div>';
+  const entries=Object.entries(obj).sort((a,b)=>b[1].leads-a[1].leads);
+  const cards=entries.map(([name,{leads,closed}])=>{
+    const col=srcColor(name), icon=srcIcon(name);
+    const numCol=SRC_GREY.has(name)?(_light?'rgba(0,0,0,.35)':'rgba(255,255,255,.4)'):SRC_BRAND.has(name)?col:'var(--g)';
+    const rate=leads>0?Math.round((closed/leads)*100):0;
+    const rateCol=rate>=25?'var(--g)':rate>0?'var(--amber)':(_light?'rgba(0,0,0,.2)':'rgba(255,255,255,.35)');
+    const rateBg=rate>=25?(_light?'rgba(56,142,60,.1)':'rgba(200,255,0,.1)'):rate>0?(_light?'rgba(56,142,60,.08)':'rgba(251,191,36,.1)'):(_light?'rgba(0,0,0,.04)':'rgba(255,255,255,.05)');
+    return `<div class="src-card">
+      <div class="src-card-top">
+        <div class="src-icon">${icon}</div>
+        <div class="src-name">${esc(SRC_DISPLAY[name]||name)}</div>
+      </div>
+      <div class="src-count" style="color:${numCol};">${leads}</div>
+      <div class="src-card-foot">
+        <span class="src-leads-lbl">${closed} closed</span>
+        <span class="src-close-pill" style="color:${rateCol};background:${rateBg};">${rate}%</span>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="src-grid">${cards}</div>`;
+}
+
+function renderReps(reps, monthLabel){
+  const EXCLUDED=['Unassigned','Nurhan'];
+  const RANK_LABELS=['#1','#2','#3','#4','#5','#6','#7','#8'];
+  const PER_PAGE=4;
+  const active=reps.filter(r=>!EXCLUDED.includes(r.name));
+  if(!active.length) return '<div class="empty">No rep data yet</div>';
+  const maxRate=Math.max(...active.map(r=>r.activities>0?Math.round((r.closedWon/r.activities)*100):0),1);
+
+  function makeCard(r,i){
+    const acts=r.activities||0;
+    const rate=acts>0?Math.round((r.closedWon/acts)*100):0;
+    const isLeader=i===0;
+    const rankLabel=RANK_LABELS[i]||`#${i+1}`;
+    const barW=maxRate>0?Math.round((rate/maxRate)*100):0;
+    const rateClass=rate>=30?'':'amber';
+    return `<div class="rep-card${isLeader?' leader':''}">
+      ${isLeader?'<img class="rep-crown" src="https://widgets.opxio.io/icons/crown.png" alt=""/>':''}
+      <div class="rep-card-hdr">
+        <div class="rep-card-name">${esc(r.name)}</div>
+        <span class="rep-rank">${rankLabel}</span>
+      </div>
+      <div class="rep-hero">
+        <div class="rep-hero-val">${r.closedWon}</div>
+        <div class="rep-hero-lbl">Closed Won</div>
+      </div>
+      <div class="rep-bar-wrap">
+        <div class="rep-bar-meta">
+          <span class="rep-bar-lbl">Close Rate</span>
+          <span class="rep-bar-pct ${rateClass}">${rate}%</span>
+        </div>
+        <div class="rep-bar-track"><div class="rep-bar-fill" style="width:${barW}%;${!isLeader?'opacity:.6':''}"></div></div>
+      </div>
+      <div class="rep-stat">
+        <span class="rep-stat-lbl">Activities</span>
+        <span class="rep-stat-val">${acts}</span>
+      </div>
+    </div>`;
+  }
+
+  const layoutClass = active.length<=2 ? 'layout-2' : 'layout-4';
+
+  if(active.length<=4){
+    const cards=active.map((r,i)=>makeCard(r,i)).join('');
+    return `<div class="rep-cards ${layoutClass}">${cards}</div>`;
+  }
+
+  // Paginated — 4 per page
+  const totalPages=Math.ceil(active.length/PER_PAGE);
+  let currentPage=0;
+  function renderPage(){
+    const start=currentPage*PER_PAGE;
+    const slice=active.slice(start,start+PER_PAGE);
+    const cards=slice.map((r,i)=>makeCard(r,start+i)).join('');
+    const prevDis=currentPage===0?'disabled':'';
+    const nextDis=currentPage>=totalPages-1?'disabled':'';
+    return `<div class="rep-cards layout-4">${cards}</div>
+    <div class="rep-page-nav">
+      <button class="rep-page-btn" id="rep-prev" ${prevDis}>← Prev</button>
+      <span class="rep-page-info">Page ${currentPage+1} of ${totalPages}</span>
+      <button class="rep-page-btn" id="rep-next" ${nextDis}>Next →</button>
+    </div>`;
+  }
+
+  // Wire up after render via timeout
+  setTimeout(()=>{
+    const prev=document.getElementById('rep-prev');
+    const next=document.getElementById('rep-next');
+    const wrap=document.getElementById('rep-wrap');
+    if(prev) prev.onclick=()=>{ if(currentPage>0){currentPage--;wrap.innerHTML=renderPage();wireRep(wrap);} };
+    if(next) next.onclick=()=>{ if(currentPage<totalPages-1){currentPage++;wrap.innerHTML=renderPage();wireRep(wrap);} };
+  },50);
+
+  function wireRep(wrap){
+    setTimeout(()=>{
+      const prev=wrap.querySelector('#rep-prev');
+      const next=wrap.querySelector('#rep-next');
+      if(prev) prev.onclick=()=>{ if(currentPage>0){currentPage--;wrap.innerHTML=renderPage();wireRep(wrap);} };
+      if(next) next.onclick=()=>{ if(currentPage<totalPages-1){currentPage++;wrap.innerHTML=renderPage();wireRep(wrap);} };
+    },50);
+  }
+
+  return `<div id="rep-wrap">${renderPage()}</div>`;
+}
+
+function render(d){
+  const live=d.live||{};
+  const monLabel=currentMonthShort();
+  const cr=d.closeRate;
+  const cw=d.closedWon||0, cl=d.closedLost||0;
+  const crCol=cr===null?'var(--zero-val)':cr>=30?'var(--g)':cr>=15?'var(--amber)':'var(--red)';
+  const stillActive=(d.monthLeads||0)-(d.closedWon||0)-(d.closedLost||0);
+  const crSub=filterMonth&&stillActive>0?`Closed Won / Quotes Sent · ${stillActive} still active`:'Closed Won / Quotes Sent';
+
+  // Lead Tier mini bar-chart rows (Priority / Average / Weak) — share of month's total leads
+  const _tierVar={priority:'--tier-pri',average:'--tier-avg',weak:'--tier-weak'};
+  const _tiers=(d.leadTiers&&d.leadTiers.tiers)||[];
+  const ltRows=_tiers.length?_tiers.map(t=>{
+    const fill='var('+(_tierVar[t.key]||'--tier-weak')+')';
+    const w=Math.max(t.pct||0,(t.count||0)>0?4:0);
+    return `<div class="lt-row">`
+      +`<span class="lt-lbl">${esc(t.label)}</span>`
+      +`<div class="lt-track"><div class="lt-fill" style="width:${w}%;min-width:36px;background:${fill};">${(t.pct||0)+'%'}</div></div>`
+      +`<span class="lt-count">${t.count||0}</span>`
+    +`</div>`;
+  }).join(''):`<div class="empty">No tier data</div>`;
+
+  // ── Row 1: KPI tiles — month-locked ──
+  const row1=`<div class="g-hero row">
+    <div class="card hero">
+      <span class="hero-eyebrow">New Leads — ${monLabel}</span>
+      <div class="hero-val">${d.monthLeads||0}</div>
+      <div class="hero-label">Leads this month</div>
+    </div>
+    <div class="card kpi">
+      <span class="kpi-lbl">Closed Won</span>
+      <div class="kpi-val" style="color:${(d.closedWon||0)>0?'var(--g)':'var(--zero-val)'};">${d.closedWon||0}</div>
+      <div class="kpi-sub">of ${monLabel} leads</div>
+    </div>
+    <div class="card kpi">
+      <span class="kpi-lbl">Close Rate</span>
+      <div class="kpi-val" style="color:${crCol};">${cr!==null?cr+'%':'—'}</div>
+      <div class="kpi-sub">${crSub}</div>
+    </div>
+    <div class="card kpi lt-card">
+      <span class="kpi-lbl">Lead Tiers — ${monLabel}</span>
+      <div class="lt">${ltRows}</div>
+    </div>
+  </div>`;
+
+  // ── Row 2: Pipeline + live column (current month only) ──
+  const funnel=d.stageFunnel||[], fMax=Math.max(...funnel.map(s=>s.count),1);
+  const fRows=funnel.map((s,i)=>{
+    const w=Math.max(Math.round((s.count/fMax)*100),s.count>0?3:0);
+    return `<div class="f-item">
+      <span class="f-lbl">${esc(s.stage)}</span>
+      <div class="f-track"><div class="f-fill" style="width:${w}%;background:${getStageColors()[i]||(_light?'rgba(46,125,50,.6)':'rgba(200,255,0,.4)')};"></div></div>
+      <span class="f-n">${s.count}</span>
+    </div>`;
+  }).join('');
+
+  const isCurrentMonth=!filterMonth;
+  const liveCol=isCurrentMonth?`<div style="display:flex;flex-direction:column;gap:10px;">
+    <div class="card kpi">
+      <span class="kpi-lbl">Follow-ups Due Today</span>
+      <div class="kpi-val" style="color:${(live.followupsToday||0)>0?'var(--blue)':'var(--zero-val)'};">${live.followupsToday||0}</div>
+      <div class="kpi-sub">Entire pipeline · ${live.followupsNext3||0} due within 3 days</div>
+    </div>
+    <div class="card kpi">
+      <span class="kpi-lbl">Overdue Quotations</span>
+      <div class="kpi-val" style="color:${(live.overdueResponse||0)>0?'var(--red)':'var(--zero-val)'};">${live.overdueResponse||0}</div>
+      <div class="kpi-sub">Entire pipeline · no quote issued after 2h</div>
+    </div>
+  </div>`:'';
+
+  const row2=isCurrentMonth?`<div class="g2 row">
+    <div class="card panel">
+      <div class="panel-hdr">
+        <span class="panel-title">Pipeline Stages</span>
+        <span class="badge">${d.monthLeads||0} Enquiries — ${monLabel}</span>
+      </div>
+      ${fRows||'<div class="empty">No pipeline data yet</div>'}
+    </div>
+    ${liveCol}
+  </div>`:`<div class="row">
+    <div class="card panel" style="width:100%;">
+      <div class="panel-hdr">
+        <span class="panel-title">Pipeline Stages</span>
+        <span class="badge">${d.monthLeads||0} Enquiries — ${monLabel}</span>
+      </div>
+      ${fRows||'<div class="empty">No pipeline data yet</div>'}
+      ${stillActive>0?`<div class="cohort-note"><span class="cohort-note-dot"></span>${stillActive} leads from the ${monLabel} cohort are still open — close rate will update as they resolve.</div>`:''}
+    </div>
+  </div>`;
+
+  // ── Row 3: Rep + Lead Sources + Product (3-col) ──
+  const reps=(d.repBreakdown||[]).filter(r=>r.name!=='Unassigned');
+  const prodTotal=Object.values(d.productBreakdown||{}).reduce((s,n)=>s+n,0)||0;
+  const srcTotal=Object.values(d.sourceBreakdown||{}).reduce((s,v)=>s+(v.leads||0),0)||0;
+
+  const repPanel=reps.length?`<div class="card panel">
+    <div class="panel-hdr">
+      <span class="panel-title">Sales Rep Performance</span>
+      <span class="badge blue">${reps.length} rep${reps.length!==1?'s':''}</span>
+    </div>
+    ${renderReps(d.repBreakdown||[], monLabel)}
+  </div>`:'';
+
+  const srcPanel=srcTotal>0?`<div class="card panel">
+    <div class="panel-hdr"><span class="panel-title">Lead Sources</span><span class="badge">${srcTotal} total</span></div>
+    ${renderSources(d.sourceBreakdown)}
+  </div>`:'';
+
+  const prodPanel=prodTotal>0?`<div class="card panel" style="display:flex;flex-direction:column;">
+    <div class="panel-hdr"><span class="panel-title">Product Breakdown</span><span class="badge">${prodTotal} enquiries</span></div>
+    <div style="flex:1;display:flex;align-items:center;">
+      ${renderDonut(d.productBreakdown,PROD_COLORS,110)}
+    </div>
+  </div>`:'';
+
+  const row3panels=[repPanel,srcPanel].filter(Boolean);
+  const row3=row3panels.length?`<div class="g2 row mob-hide">${row3panels.join('')}</div>`:'';
+
+  document.getElementById('main').innerHTML=row1+row2+row3;
+  document.getElementById('ts').textContent='Updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+let _light=false;
+const SUN_SVG=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+const MOON_SVG=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+function toggleMode(){_light=!_light;document.body.classList.toggle('light',_light);const mb=document.getElementById('mb');if(mb)mb.innerHTML=_light?MOON_SVG:SUN_SVG;}
+let _loadCtrl=null;
+let _abortedByNav=false;
+const _monthCache=new Map(); // client-side cache: monthKey → { data, ts }
+const CURRENT_TTL  = 6*60*1000;  // current month: 6 min
+const PAST_TTL     = 30*60*1000; // past months: 30 min (leads can still close/be edited)
+
+function monthKey(fm){ return fm ? `${fm.year}-${fm.month}` : 'current'; }
+function isCurrentMonth(fm){ return !fm; }
+
+async function load(forceNetwork=false){
+  if(_loadCtrl){ _abortedByNav=true; _loadCtrl.abort(); }
+  _abortedByNav=false;
+
+  // Client cache hit — check TTL based on whether it's current or past month
+  const ck=monthKey(filterMonth);
+  const cached=_monthCache.get(ck);
+  const ttl=isCurrentMonth(filterMonth)?CURRENT_TTL:PAST_TTL;
+  if(!forceNetwork && cached && (Date.now()-cached.ts)<ttl){
+    render(cached.data);
+    return;
+  }
+
+  _loadCtrl=new AbortController();
+  const sig=_loadCtrl.signal;
+  // 25s timeout — allows for a cold serverless function start
+  const timer=setTimeout(()=>{ _abortedByNav=false; _loadCtrl.abort(); },25000);
+  const b=document.getElementById('rb');
+  if(b)b.classList.add('spinning');
+  try{
+    const params=new URLSearchParams();
+    if(_tok) params.set('token',_tok);
+    if(filterMonth){ params.set('month',filterMonth.month); params.set('year',filterMonth.year); }
+    const r=await fetch('/api/crm-pipeline?'+params.toString(),{signal:sig});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    _monthCache.set(ck, { data, ts: Date.now() }); // store with timestamp
+    render(data);
+  }catch(e){
+    if(e.name==='AbortError'){
+      if(_abortedByNav) return; // cancelled by new navigation — silent
+      document.getElementById('main').innerHTML=`<div class="loading"><div style="color:var(--red);font-size:12px;font-weight:700;">Request timed out — <a href="" style="color:var(--g);" onclick="location.reload();return false;">Reload</a></div></div>`;
+      return;
+    }
+    document.getElementById('main').innerHTML=`<div class="loading"><div style="color:var(--red);font-size:12px;font-weight:700;">Failed — ${esc(e.message)}</div></div>`;
+  }finally{
+    clearTimeout(timer);
+    if(!sig.aborted){const b2=document.getElementById('rb');if(b2)b2.classList.remove('spinning');}
+  }
+}
+// Manual refresh: force network for current month, let past months respect their TTL
+function doRefresh(){ _monthCache.delete('current'); load(true); }
+
+// Auto-refresh: only force-clear current month, past months expire via TTL
+updateMonthNav();
+load();
+setInterval(()=>{ _monthCache.delete('current'); load(true); }, 6*60*1000);
+</script>
+</body>
+</html>

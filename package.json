@@ -1,0 +1,20 @@
+{
+  "name": "shin-supplies-widget",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shin Supplies CRM & Pipeline dashboard — standalone Next.js app (widget + API) for Vercel",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "14.2.15",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "p-queue": "8.0.1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
