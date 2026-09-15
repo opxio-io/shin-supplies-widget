@@ -13,6 +13,12 @@
 import { cacheGet, cacheSet, cacheKey, cacheDelete } from '../../lib/cache.js'
 import { notionQueue } from '../../lib/queue.js'
 
+console.log('[crm-pipeline] DB CONFIG', {
+  enquiry: ENQUIRY_DB,
+  people: PEOPLE_DB,
+  hasNotionKey: !!NOTION_KEY
+})
+
 const NOTION_KEY   = process.env.NOTION_API_KEY
 // Verified against the live workspace — these are the correct DB ids for
 // Shin Supplies (the old opxio-api handler's hardcoded fallbacks pointed at
