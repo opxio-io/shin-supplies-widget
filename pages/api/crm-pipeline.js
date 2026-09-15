@@ -17,8 +17,8 @@ const NOTION_KEY   = process.env.NOTION_API_KEY
 // Verified against the live workspace — these are the correct DB ids for
 // Shin Supplies (the old opxio-api handler's hardcoded fallbacks pointed at
 // DB ids that don't exist; it only worked because Supabase had an override).
-const ENQUIRY_DB   = process.env.ENQUIRY_DB || '71c9ba4af0694291876bf78422805f18'
-const PEOPLE_DB    = process.env.PEOPLE_DB  || '34cfe60097f680e1bac0e75b431bc325'
+const ENQUIRY_DB   = process.env.ENQUIRY_DB || 'cbebbbc47d4d827fa66801097f224dfc'
+const PEOPLE_DB    = process.env.PEOPLE_DB  || '5ecbbbc47d4d82f9849901b44678eb75'
 const WIDGET_TOKEN = process.env.WIDGET_TOKEN || null
 
 const EXCLUDED          = ['Unassigned', 'Nurhan']
